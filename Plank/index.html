@@ -1,0 +1,90 @@
+<style>
+    body {
+        background:#EFF;
+    }
+    #canvas {
+        background:white;
+    }
+</style>
+
+</head>
+<body>
+  <canvas id="canvas" width="700" height="500"></canvas>
+  <p>Temperature of black body: <strong id="temp_indicate">4000</strong>K , the peak wavelength is <strong id="peak_indicate"></strong>nm<p>
+  <input type="range" min="500" max="16000" value="3000" step="100" id="temp">
+
+  <script>
+    const C = 3.0e8;
+    const K = 1.38064852e-23;
+    const H = 6.62607004e-34;
+    const e = 2.718281828459;
+
+    var val = 4000;
+    var oGc;
+
+    var r = 0, g = 0, b = 0;
+
+    function line(c, t) {
+      const start = 1;
+      const end = 400;
+      const iters = 200;
+
+      function plank(lambda) {
+        var val = (2.0 * H * C * C) / (Math.pow(lambda, 5));
+        val *= 1 / (Math.pow(e, (H * C) / (lambda * K * t)) - 1);
+        return val;
+      }
+
+      for (var i = 0; i < iters; i++) {
+        var lambda = (start + (end - start) / iters * i) * 10e-9;
+        var val = plank(lambda)
+        val = 500 - val * 5e-11;
+
+        c.lineTo(i / iters * 700, val);
+      }
+
+      r = plank(650e-9);
+      g = plank(545e-9);
+      b = plank(450e-9);
+      var bright = Math.sqrt(r*r+g*g+b*b);
+      r = Math.pow(r / bright, 1.0 / 2.2);
+      g = Math.pow(g / bright, 1.0 / 2.2);
+      b = Math.pow(b / bright, 1.0 / 2.2);
+    }
+
+    function redraw(c) {
+      var c = document.querySelector( "#canvas" );
+      c.height = c.height;
+
+      oGc.moveTo(0,500);
+      line(oGc, val);
+      oGc.stroke();
+
+      oGc.fillStyle = "#000";
+      oGc.fillRect(619,9,72,72);
+      oGc.fillStyle = "rgba(" + r * 256 * 1.3 + "," + g * 256 * 1.3 + "," + b * 256 * 1.3 + ", 1.0)";
+      oGc.fillRect(620,10,70,70);
+    }
+
+    function refresh() {
+      val = document.getElementById("temp").value;
+      document.getElementById("temp_indicate").textContent = val;
+
+      var peak = 2.8977729e-4 / val;
+      document.getElementById("peak_indicate").textContent = Math.round(peak * 10e9);
+
+      redraw(oGc);
+    }
+
+    window.onload = function(){
+      var oCanvas = document.querySelector( "#canvas" );
+          oGc = oCanvas.getContext( '2d' );
+
+      refresh();
+    }
+
+    //document.getElementById("temp").onchange = refresh;
+
+    document.getElementById("temp").oninput = refresh;
+  </script>
+</body>
